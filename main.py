@@ -3,12 +3,13 @@ from bs4 import BeautifulSoup
 import requests
 import time
 import random
+import json
 
-# Set the URL you want to scrape
 link = f"https://www.imdb.com/user/ur102308292/ratings?ref_=nv_usr_rt_4"
 baseUrl = "https://www.imdb.com"
-gettingData = True
+gettingData = False
 IMDBData = {}
+
 # Make a GET request to the URL
 def getSiteData(link):
     r = requests.get(link)
@@ -50,20 +51,26 @@ def createIMDBData(INData, page):
         data.write(str(IMDBData))
         
 def getMovieWatchtime():
+    with open("dict.txt") as f:
+        data = f.read()
+        IMDBData = json.loads(data)
     
+    print(IMDBData)
+        
     watchtime: int = 0
     for key, value in IMDBData.items():
             pass
-    
+        
+getMovieWatchtime()   
 page: int = 0
 while gettingData:
     antiBot = random.randint(1, 3)
     print(f"Waiting {antiBot} s")
     time.sleep(antiBot)
     
-    #soup = getSiteData(link)
-    #link = getNewPage(soup, baseUrl)
-    #createIMDBData(soup, page)
+    soup = getSiteData(link)
+    link = getNewPage(soup, baseUrl)
+    createIMDBData(soup, page)
     
 # Loop through the results and save the text of each element
             
