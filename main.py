@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import requests
 import time
 import random
-import json
+import ast
 
 link = f"https://www.imdb.com/user/ur102308292/ratings?ref_=nv_usr_rt_4"
 baseUrl = "https://www.imdb.com"
@@ -51,15 +51,13 @@ def createIMDBData(INData, page):
         data.write(str(IMDBData))
         
 def getMovieWatchtime():
-    with open("dict.txt") as f:
-        data = f.read()
-        IMDBData = json.loads(data)
-    
-    print(IMDBData)
+    with open("dict.txt", "r", encoding="UTF-8") as f:
+        s = f.read()
+        IMDBData = ast.literal_eval(s)
         
     watchtime: int = 0
     for key, value in IMDBData.items():
-            pass
+        print(value)
         
 getMovieWatchtime()   
 page: int = 0
