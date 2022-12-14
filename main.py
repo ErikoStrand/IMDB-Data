@@ -145,4 +145,9 @@ while gettingData:
         
 
 if not gettingData:
-    compileMovieData()  
+    request = requests.get("https://api.tvmaze.com/lookup/shows?imdb=tt2085059?episodes")
+    print(request.json())
+    #compileMovieData()  
+    
+    
+    #use https://www.tvmaze.com/api#show-seasons to get tv episode data, might work
