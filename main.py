@@ -7,14 +7,27 @@ import ast
 import matplotlib.pyplot as plt
 import re
 
-link = f"https://www.imdb.com/user/ur102308292/ratings?ref_=nv_usr_rt_4"
+userid = "" # your id here: ur294914023 for example.
+link = f"https://www.imdb.com/user/{userid}/ratings?ref_=nv_usr_rt_4"
+
 baseUrl = "https://www.imdb.com"
-gettingData = False
+gettingData = True
+gettingTVData = False
 
 IMDBData = {}
 compiledIMDBData = {}
-
+    
 # Make a GET request to the URL
+def loadData():
+    with open("IMDBData.txt", "r", encoding="UTF-8") as f:
+        s = f.read()
+    IMDBData = ast.literal_eval(s)
+    return IMDBData
+
+def saveData(dict):
+    with open('IMDBData.txt', 'wt', encoding="UTF-8") as data:
+        data.write(str(dict))   
+    
 def getSiteData(link):
     r = requests.get(link)
     return BeautifulSoup(r.content, features="html.parser")
@@ -23,13 +36,20 @@ def getNewPage(data, baseUrl):
     for a in data.find_all("a", class_="flat-button lister-page-next next-page", href=True):
         return baseUrl + a["href"]
     
+def getIMDBID(data):
+    for a in data.find_all("a", href=True):
+        href = a["href"]
+        splitHREF = href.split("/")
+        return splitHREF[2]
     
+    return 
 def createIMDBData(pageData, page):    
     multimediaTitle = pageData.find_all("h3", class_="lister-item-header")
     for count, data in enumerate(multimediaTitle):
         selected = int(data.find("span", class_="lister-item-index unbold text-primary").text)
         IMDBData[selected] = {}
         IMDBData[selected]["title"] = data.find("a").text
+        IMDBData[selected]["id"] = getIMDBID(data)
         IMDBData[selected]["release"] = data.find("span", class_="lister-item-year text-muted unbold").text
                 
     multimediaInformation = pageData.find_all("p", class_="text-muted text-small")
@@ -69,16 +89,15 @@ def createIMDBData(pageData, page):
         IMDBData[selected]["rated-on"] = data.text.replace("Rated on", "")
         
     # write dict to textfile for save keeping
-    with open('dict.txt', 'wt', encoding="UTF-8") as data:
-        data.write(str(IMDBData))
-        
+    saveData(IMDBData)
+      
 def getMinutesFromRuntime(runtime):
     minutes = 0
     runtime = runtime.split()
     if len(runtime) == 4:
         minutes += int(runtime[0]) * 60
         minutes += int(runtime[2])
-    if len(runtime) == 2:
+    if len(runtime) <= 2:
         minutes += int(runtime[0])
         
     return minutes
@@ -95,39 +114,103 @@ def compileGenresIntoList(genres):
 def sortGenres():
     compiledIMDBData["genre-amount"] = sorted(compiledIMDBData["genre-amount"].items(), key=lambda x: x[1], reverse=True)
     
-def compileMovieData():
+def removeDuplicates():
+    media = []
+    newData = {}
+    for key, value in IMDBData.items():
+        if value["id"] not in media:
+            IMDBData[key] = {}
+            media.append(value["id"])
+            newData[key] = value
+            
+        elif value["id"] in media:
+            print("Duplicate detexted")
+            
+    saveData(newData)
+            
+def compileAllData():
     #opening dictionaries
     compiledIMDBData["total-movies"]: int = 0
     compiledIMDBData["watchtime"]: int = 0
+    compiledIMDBData["episodes"]: int = 0
     compiledIMDBData["global-rating"]: int = 0
     compiledIMDBData["personal-rating"]: int = 0
     compiledIMDBData["genre-amount"] = {}
-    
-    with open("dict.txt", "r", encoding="UTF-8") as f:
-        s = f.read()
-        IMDBData = ast.literal_eval(s)
                
     for key, value in IMDBData.items():
-        #removes shows from calculations
-        if "–" not in value["release"]:
-            compiledIMDBData["total-movies"] += 1
-            compiledIMDBData["watchtime"] += getMinutesFromRuntime(value["runtime"])
-            compiledIMDBData["global-rating"] += float(value["global-rating"])
-            compiledIMDBData["personal-rating"] += int(value["my-rating"])
-            compileGenresIntoList(value["genres"])
+        compiledIMDBData["total-movies"] += 1
+        compiledIMDBData["watchtime"] += getMinutesFromRuntime(value["runtime"])
+        compiledIMDBData["global-rating"] += float(value["global-rating"])
+        compiledIMDBData["personal-rating"] += int(value["my-rating"])
+        try:
+            compiledIMDBData["episodes"] += int(value["episodes"])
+        except:
+            # i know erorr, its a movie not a show. so episodes dont exsist.
+            pass
+        
+        compileGenresIntoList(value["genres"])
             
             
             
     sortGenres() # converts the dictionary to a list and tuples.        
     print(compiledIMDBData)
     
-def createShowData(pageData, selected):
-    episodeCount = int(pageData.find("span", class_="sc-89e7233a-3 kNoqWq").text)
-    print(episodeCount)
+    
+def findTVMazeData(data, selected):
+    if "–" in data["release"]:
+        time.sleep(0.2)
+        name = data["title"]
+        try:
+            ID = data["id"]
+            mazeData = requests.get(f"https://api.tvmaze.com/lookup/shows?imdb={ID}").json()
+            mazeID = mazeData["id"]
+            print(f"got data for, {name}, with ID")   
+        except:
+            pass
+            # i know error so pass, fills up teriminal
+            try:
+                name = data["title"]
+                mazeData = requests.get(f"https://api.tvmaze.com/singlesearch/shows?q={name}").json()
+                mazeID = mazeData["id"]
+                print(f"got data for, {name}, with name")
+            except:
+                pass
+                #i know error so pass, fills up terminal
+
+            
+        try:
+            showData = requests.get(f"https://api.tvmaze.com/shows/{mazeID}/episodes").json()
+            minutes = 0
+            episodes = 0
+            for value in showData:
+                try:
+                    minutes += value["runtime"]
+                    lastmin = value["runtime"]
+                except:
+                    minutes += lastmin
+
+                episodes += 1
+
+            return (minutes, episodes, selected)
+        
+        except:
+            print(f"could not get any data using tvmaze :(, {name}")
+
+def updateIMDBData(data, dict):
+    #clean the data
+    data = [i for i in data if i is not None]
+    #loop thru data and add it to IMDBData
+    for info in data:
+        dict[info[-1]]["runtime"] = str(info[0])
+        dict[info[-1]]["episodes"] = str(info[1])
+    return dict
+
+if not gettingData:
+    IMDBData = loadData()
     
 page: int = 0
 while gettingData:
-    antiBot = random.randint(0, 2)
+    antiBot = random.uniform(0.2, 1.3)
     print(f"Waiting {antiBot} s")
     time.sleep(antiBot)
     
@@ -137,17 +220,25 @@ while gettingData:
     
 # Loop through the results and save the text of each element
             
-    print(f"Completed page nmr {page}") 
+    print(f"got data for page {page}") 
     page += 1   
     if link is None:
         print("Got all multimedia data!")
+        removeDuplicates()
         gettingData = False
+        gettingTVData = True
         
-
+while gettingTVData:
+    IMDBData = loadData()
+    newData = []
+    for key, value in IMDBData.items():
+        newData.append(findTVMazeData(value, key))
+    
+    saveData(updateIMDBData(newData, IMDBData))
+    gettingTVData = False
+    
 if not gettingData:
-    request = requests.get("https://api.tvmaze.com/lookup/shows?imdb=tt2085059?episodes")
-    print(request.json())
-    #compileMovieData()  
+    IMDBData = loadData()
+    #compile a list of all the shows that are watched.
     
-    
-    #use https://www.tvmaze.com/api#show-seasons to get tv episode data, might work
+    compileAllData()  
