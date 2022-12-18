@@ -7,11 +7,10 @@ import ast
 import re
 import os
 
-userid = "ur4103165" # your id here: ur294914023 for example.
+userid = "ur0204988" # your id here: ur294914023 for example.
 link = f"https://www.imdb.com/user/{userid}/ratings?ref_=nv_usr_rt_4"
-
 baseUrl = "https://www.imdb.com"
-gettingData = False
+gettingData = True
 gettingTVData = False
 
 IMDBData = {}
@@ -22,14 +21,14 @@ progress["time"]: float = 0
 clear = lambda: os.system("cls")
 
 # Make a GET request to the URL
-def loadData():
-    with open("IMDBData.txt", "r", encoding="UTF-8") as f:
+def loadData(name):
+    with open(f"{name}.txt", "r", encoding="UTF-8") as f:
         s = f.read()
     IMDBData = ast.literal_eval(s)
     return IMDBData
 
-def saveData(dict):
-    with open('IMDBData.txt', 'wt', encoding="UTF-8") as data:
+def saveData(dict, name):
+    with open(f'{name}.txt', 'wt', encoding="UTF-8") as data:
         data.write(str(dict))   
     
 def getSiteData(link):
@@ -94,7 +93,7 @@ def createIMDBData(pageData, page):
             try: 
                 IMDBData[selected]["genres"] = data.find("span", class_="genre").text
             except:
-                IMDBData[selected]["genre"] = "none"
+                IMDBData[selected]["genres"] = "none"
                 
             #try except to check if it has a certiface since not all of them have it adds 0 to not destroy calculations.
             try:
@@ -119,7 +118,7 @@ def createIMDBData(pageData, page):
         IMDBData[selected]["rated-on"] = data.text.replace("Rated on", "")
         
     # write dict to textfile for save keeping
-    saveData(IMDBData)
+    saveData(IMDBData, "IMDBData")
       
 def getMinutesFromRuntime(runtime):
     minutes = 0
@@ -163,7 +162,7 @@ def removeDuplicates():
         elif value["id"] in media:
             print("Duplicate detected")
             
-    saveData(newData)
+    saveData(newData, "IMDBData")
             
 def compileAllData():
     #opening dictionaries
@@ -193,14 +192,15 @@ def compileAllData():
         compiledIMDBData["global-rating"] += float(value["global-rating"])
         compiledIMDBData["personal-rating"] += int(value["my-rating"])
         
-        compileGenresIntoList(value["genres"])
+        genres = value["genres"]
+        compileGenresIntoList(genres)
             
             
             
     sortGenres() # converts the dictionary to a list and tuples.        
     
 def printDataAllFancy():
-    print(f"\n\n\n\n\nIn total you have spent {compiledIMDBData['watchtime-movies']/60:.0f} hours watching {compiledIMDBData['total-movies']} movies while also managing to watch {compiledIMDBData['total-shows']} tv-shows in {compiledIMDBData['watchtime-shows']/60:.0f} hours. \nThis combines into {compiledIMDBData['watchtime']/60:.0f} hours of of watchtime. How crazy! \nThat's {compiledIMDBData['watchtime']/525948:.3f} % of a year or {compiledIMDBData['watchtime']/365:.0f} minutes everyday.\nYou also dived into multiple genres where these where in your top 5:")
+    print(f"\n\n\n\n\nIn total you have spent {compiledIMDBData['watchtime-movies']/60:.0f} hours watching {compiledIMDBData['total-movies']} movies while also managing to watch {compiledIMDBData['total-shows']} tv-shows in {compiledIMDBData['watchtime-shows']/60:.0f} hours. \nThis combines into {compiledIMDBData['watchtime']/60:.0f} hours of of watchtime. How crazy! \nThat's {compiledIMDBData['watchtime']/525948*100:.2f} % of a year or {compiledIMDBData['watchtime']/365:.0f} minutes everyday.\nYou also dived into multiple genres where these where in your top 5:")
     for count, data in enumerate(compiledIMDBData["genre-amount"]):
         if count >= 6:
             break
@@ -253,7 +253,7 @@ def updateIMDBData(data, dict):
     return dict
 
 if not gettingData:
-    IMDBData = loadData()
+    IMDBData = loadData("IMDBData")
     
 page: int = 0
 while gettingData:
@@ -263,6 +263,7 @@ while gettingData:
     start = time.time()
     soup = getSiteData(link)
     link = getNewPage(soup, baseUrl)
+    saveData(link, "links")
     createIMDBData(soup, page)
     elapsed = time.time() - start
     progressBar(soup, elapsed, page)
@@ -278,7 +279,7 @@ while gettingData:
             
                    
 while gettingTVData:
-    IMDBData = loadData()
+    IMDBData = loadData("IMDBData")
     # scuffed way to get a progress bar for tv-shows   
     progress = {}
     progress["time"] = 0
@@ -296,11 +297,11 @@ while gettingTVData:
             newData.append(findTVMazeData(value, key))
             progressBarShow(total, current, time.time()-start)
             
-    saveData(updateIMDBData(newData, IMDBData))
+    saveData(updateIMDBData(newData, IMDBData), "IMDBData")
     gettingTVData = False
     
 if not gettingData:
-    IMDBData = loadData()
+    IMDBData = loadData("IMDBData")
     #compile a list of all the shows that are watched.
     
     compileAllData()  
