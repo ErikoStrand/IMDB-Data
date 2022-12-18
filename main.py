@@ -4,7 +4,7 @@ import requests
 import time
 import random
 import ast
-import re
+import lxml
 import os
 
 userid = "ur0204988" # your id here: ur294914023 for example.
@@ -17,7 +17,7 @@ IMDBData = {}
 compiledIMDBData = {}
 progress = {}   
 progress["time"]: float = 0 
-
+session_request = requests.session()
 clear = lambda: os.system("cls")
 
 # Make a GET request to the URL
@@ -32,8 +32,10 @@ def saveData(dict, name):
         data.write(str(dict))   
     
 def getSiteData(link):
-    r = requests.get(link)
-    return BeautifulSoup(r.content, features="html.parser")
+    start = time.time()
+    r = session_request.get(link)
+    print(time.time() - start, "s")
+    return BeautifulSoup(r.content, "lxml")
 
 def getNewPage(data, baseUrl):
     for a in data.find_all("a", class_="flat-button lister-page-next next-page", href=True):
@@ -53,7 +55,7 @@ def progressBarShow(total, current, time):
     progress["pages-left"] = total - current
     
     clear()
-    print(f"Getting TV-Show Data:\n{progress['current']/progress['max']*100:.2f}% - Estimated Time: {progress['pages-left']*(progress['time']/(progress['current'])):.1f}s - Elapsed Time: {progress['time']:.1f}s - {current}/{total}")
+    print(f"Getting TV-Show Data:\n{progress['current']/progress['max']*100:.2f}% - Estimated Time: {progress['pages-left']*(progress['time']/(progress['current'])):.1f}s - Elapsed Time: {progress['time']:.1f}s - {current}/{total} - Request: {time:.1f}s")
     
 def progressBar(pageData, elapsed, page):
     data = pageData.find_all("span", class_="pagination-range")
@@ -69,57 +71,45 @@ def progressBar(pageData, elapsed, page):
     progress["pages-left"] = maxPage - page
     
     clear()
-    print(f"Getting Basic Data:\n{progress['current']/progress['max']*100:.2f}% - Estimated Time: {progress['pages-left']*(progress['time']/(page+1)):.1f}s - Elapsed Time: {progress['time']:.1f}s - {page}/{maxPage}")
+    print(f"Getting Basic Data:\n{progress['current']/progress['max']*100:.2f}% - Estimated Time: {progress['pages-left']*(progress['time']/(page+1)):.1f}s - Elapsed Time: {progress['time']:.1f}s - {page}/{maxPage} - Request: {elapsed:.1f}s")
     
-def createIMDBData(pageData, page):    
-    multimediaTitle = pageData.find_all("h3", class_="lister-item-header")
-    for count, data in enumerate(multimediaTitle):
+def createIMDBData(pageData, page):  
+    allData = pageData.find_all("div", class_="lister-item-content")
+    for count, data in enumerate(allData):
         selected = data.find("span", class_="lister-item-index unbold text-primary").text
         selected = int("".join(selected.split(",")))
         IMDBData[selected] = {}
         IMDBData[selected]["title"] = data.find("a").text
         IMDBData[selected]["id"] = getIMDBID(data)
-        IMDBData[selected]["release"] = data.find("span", class_="lister-item-year text-muted unbold").text
-                
-    multimediaInformation = pageData.find_all("p", class_="text-muted text-small")
-    for count, data in enumerate(multimediaInformation):   
-        if count % 3 == 0:
-            selected = int((count + 3) / 3 + (page * 100))         
-            try:  
-                IMDBData[selected]["runtime"] = data.find("span", class_="runtime").text   
-    
-            except:
-                IMDBData[selected]["runtime"] = "0 min"
-            try: 
-                IMDBData[selected]["genres"] = data.find("span", class_="genre").text
-            except:
-                IMDBData[selected]["genres"] = "none"
-                
-            #try except to check if it has a certiface since not all of them have it adds 0 to not destroy calculations.
-            try:
-                IMDBData[selected]["certificate"] = data.find("span", class_="certificate").text
-            except:
-                IMDBData[selected]["certificate"] = "0"
+        IMDBData[selected]["release"] = data.find("span", class_="lister-item-year text-muted unbold").text       
+        try:  
+            IMDBData[selected]["runtime"] = data.find("span", class_="runtime").text   
+
+        except:
+            IMDBData[selected]["runtime"] = "0 min"
+        try: 
+            IMDBData[selected]["genres"] = data.find("span", class_="genre").text
+        except:
+            IMDBData[selected]["genres"] = "none"
+            
+        #try except to check if it has a certiface since not all of them have it adds 0 to not destroy calculations.
+        try:
+            IMDBData[selected]["certificate"] = data.find("span", class_="certificate").text
+        except:
+            IMDBData[selected]["certificate"] = "0"
     
     #gets the global rating and your personal rating. Somehow got the global one but that was by mistake :)      
-    multimediaRating = pageData.find_all("span", class_="ipl-rating-star__rating")   
-    selected = 0 + (page * 100)
-    for count, data in enumerate(multimediaRating):
-        if count % 24 == 0:
-            selected += 1
-            IMDBData[selected]["global-rating"] = data.text
-            IMDBData[selected]["my-rating"] = multimediaRating[count + 1].text
-            
-    #get the date you rated the media:
-    pattern = re.compile(r"Rated on") # using this you can a tag that contains a specific text.
-    multimediaRatedOn = pageData.find_all("p", class_="text-muted", text = pattern) 
-    for count, data in enumerate(multimediaRatedOn):
-        selected = count + 1
-        IMDBData[selected]["rated-on"] = data.text.replace("Rated on", "")
+        multimediaRating = data.find_all("span", class_="ipl-rating-star__rating")   
+        for count, data in enumerate(multimediaRating):
+            if count % 24 == 0:
+                IMDBData[selected]["global-rating"] = data.text
+                IMDBData[selected]["my-rating"] = multimediaRating[count + 1].text
+                
+          
         
     # write dict to textfile for save keeping
     saveData(IMDBData, "IMDBData")
-      
+    
 def getMinutesFromRuntime(runtime):
     minutes = 0
     runtime = runtime.split()
@@ -209,7 +199,6 @@ def printDataAllFancy():
             
     
 def findTVMazeData(data, selected):
-    time.sleep(0.05)
     name = data["title"]
     try:
         ID = data["id"]
@@ -260,7 +249,6 @@ while gettingData:
     start = time.time()
     antiBot = random.uniform(0.2, 0.5)
     time.sleep(antiBot)
-    start = time.time()
     soup = getSiteData(link)
     link = getNewPage(soup, baseUrl)
     saveData(link, "links")
