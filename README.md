@@ -3,7 +3,7 @@ Scraps data your review data from imdb. And prints out the watchtime, total-medi
 
 
 Took 30minutes of waiting for responses. Hoping to get this down to 10 minutes. 31k ratings.
-![image](https://user-images.githubusercontent.com/75546186/208280311-626e89e1-2c45-4f46-b847-20d996da29a9.png)
+![image](https://user-images.githubusercontent.com/75546186/208280337-2869c1be-691a-4a76-9be0-281774d32f79.png)
 
 
 
