@@ -7,6 +7,8 @@ import ast
 import lxml
 import os
 import re
+import datetime
+from matplotlib import pyplot as plt
 
 userid = "ur102308292" # your id here: ur294914023 for example.
 link = f"https://www.imdb.com/user/{userid}/ratings?ref_=nv_usr_rt_4"
@@ -123,11 +125,10 @@ def getMinutesFromRuntime(runtime):
     return minutes
 
 def refactorDate():
-    months = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
+    months = {"Jan": 1, "Feb": 2, "Mar": 0, "Apr": 4, "May": 5, "Jun": 6, "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
     for key, value in IMDBData.items():
-        print(value)
         date = value["date-rated"].split()
-        value["date-rated"] = f"{date[2]}-{months[date[3]]}-{date[-1]}"
+        value["date-rated"] = (int(date[-1]), months[date[3]], int(date[2]))
         
     saveData(IMDBData, "IMDBData")
     
@@ -162,8 +163,8 @@ def removeDuplicates():
         elif value["id"] in media:
             print("Duplicate detected")
             
-    saveData(newData, "IMDBData")
-            
+    saveData(newData, "IMDBData")         
+    
 def compileAllData():
     #opening dictionaries
     compiledIMDBData["total-media"]: int = 0
@@ -176,6 +177,7 @@ def compileAllData():
     compiledIMDBData["global-rating"]: int = 0
     compiledIMDBData["personal-rating"]: int = 0
     compiledIMDBData["genre-amount"] = {}
+    compiledIMDBData["media-per-month"] = {}
                
     for key, value in IMDBData.items():
         if "episodes" not in value:
@@ -261,7 +263,6 @@ while gettingData:
     time.sleep(antiBot)
     soup = getSiteData(link)
     link = getNewPage(soup, baseUrl)
-    saveData(link, "links")
     createIMDBData(soup, page)
     elapsed = time.time() - start
     progressBar(soup, elapsed, page)
@@ -300,7 +301,7 @@ while gettingTVData:
     
 if not gettingData:
     IMDBData = loadData("IMDBData")
-    #compile a list of all the shows that are watched.
     refactorDate()
     compileAllData()  
     printDataAllFancy()
+    saveData(compiledIMDBData, "CompiledData")
