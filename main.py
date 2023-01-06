@@ -6,8 +6,9 @@ import random
 import ast
 import lxml
 import os
+import re
 
-userid = "ur0204988" # your id here: ur294914023 for example.
+userid = "ur102308292" # your id here: ur294914023 for example.
 link = f"https://www.imdb.com/user/{userid}/ratings?ref_=nv_usr_rt_4"
 baseUrl = "https://www.imdb.com"
 gettingData = True
@@ -19,6 +20,7 @@ progress = {}
 progress["time"]: float = 0 
 session_request = requests.session()
 clear = lambda: os.system("cls")
+pattern = re.compile(r"Rated on")
 
 # Make a GET request to the URL
 def loadData(name):
@@ -32,9 +34,7 @@ def saveData(dict, name):
         data.write(str(dict))   
     
 def getSiteData(link):
-    start = time.time()
     r = session_request.get(link)
-    print(time.time() - start, "s")
     return BeautifulSoup(r.content, "lxml")
 
 def getNewPage(data, baseUrl):
@@ -81,7 +81,8 @@ def createIMDBData(pageData, page):
         IMDBData[selected] = {}
         IMDBData[selected]["title"] = data.find("a").text
         IMDBData[selected]["id"] = getIMDBID(data)
-        IMDBData[selected]["release"] = data.find("span", class_="lister-item-year text-muted unbold").text       
+        IMDBData[selected]["release"] = data.find("span", class_="lister-item-year text-muted unbold").text
+        IMDBData[selected]["date-rated"] = data.find("p", class_="text-muted", text=pattern).text
         try:  
             IMDBData[selected]["runtime"] = data.find("span", class_="runtime").text   
 
@@ -121,6 +122,15 @@ def getMinutesFromRuntime(runtime):
         
     return minutes
 
+def refactorDate():
+    months = {"Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04", "May": "05", "Jun": "06", "Jul": "07", "Aug": "08", "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"}
+    for key, value in IMDBData.items():
+        print(value)
+        date = value["date-rated"].split()
+        value["date-rated"] = f"{date[2]}-{months[date[3]]}-{date[-1]}"
+        
+    saveData(IMDBData, "IMDBData")
+    
 def compileGenresIntoList(genres):
     genres = genres.replace(",", "").lower()
     genres = genres.split()
@@ -190,7 +200,7 @@ def compileAllData():
     sortGenres() # converts the dictionary to a list and tuples.        
     
 def printDataAllFancy():
-    print(f"\n\n\n\n\nIn total you have spent {compiledIMDBData['watchtime-movies']/60:.0f} hours watching {compiledIMDBData['total-movies']} movies while also managing to watch {compiledIMDBData['total-shows']} tv-shows in {compiledIMDBData['watchtime-shows']/60:.0f} hours. \nThis combines into {compiledIMDBData['watchtime']/60:.0f} hours of of watchtime. How crazy! \nThat's {compiledIMDBData['watchtime']/525948*100:.2f} % of a year or {compiledIMDBData['watchtime']/365:.0f} minutes everyday.\nYou also dived into multiple genres where these where in your top 5:")
+    print(f"\n\n\n\n\nIn total you have spent {compiledIMDBData['watchtime-movies']/60:.0f} hours watching {compiledIMDBData['total-movies']} movies while also managing to watch {compiledIMDBData['total-shows']} tv-shows in {compiledIMDBData['watchtime-shows']/60:.0f} hours. \nIn total you watched {compiledIMDBData['total-media']} tv-shows and movies over {compiledIMDBData['watchtime']/60:.0f} hours. How crazy! \nThat's {compiledIMDBData['watchtime']/525948*100:.2f} % of a year or {compiledIMDBData['watchtime']/365:.0f} minutes everyday.\nYou also dived into multiple genres where these where in your top 6:")
     for count, data in enumerate(compiledIMDBData["genre-amount"]):
         if count >= 6:
             break
@@ -291,6 +301,6 @@ while gettingTVData:
 if not gettingData:
     IMDBData = loadData("IMDBData")
     #compile a list of all the shows that are watched.
-    
+    refactorDate()
     compileAllData()  
     printDataAllFancy()
