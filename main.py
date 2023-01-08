@@ -296,12 +296,14 @@ while gettingTVData:
             newData.append(findTVMazeData(value, key))
             progressBarShow(total, current, time.time()-start)
             
+    refactorDate()        
     saveData(updateIMDBData(newData, IMDBData), "IMDBData")
     gettingTVData = False
     
-if not gettingData:
+if not gettingData and not gettingTVData:
     IMDBData = loadData("IMDBData")
-    refactorDate()
     compileAllData()  
     printDataAllFancy()
     saveData(compiledIMDBData, "CompiledData")
+    
+    #Trying matplotlib
