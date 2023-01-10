@@ -288,9 +288,7 @@ def makeplt(which: str, name: str, subplot: int):
     ax.xaxis_date()
     ax.bar_label(bar, size=8)
     plt.title("Ratings Per Month")
-    plt.ylabel("Amount")
-    #plt.plot(xpoints, ypoints, color=color, label=name, linestyle="-", linewidth=2)
-
+    
 if not gettingData:
     IMDBData = loadData("IMDBData")
     
@@ -337,6 +335,8 @@ while gettingTVData:
     refactorDate()        
     saveData(updateIMDBData(newData, IMDBData), "IMDBData")
     gettingTVData = False
+
+
     
 if not gettingData and not gettingTVData:
     IMDBData = loadData("IMDBData")
@@ -345,8 +345,20 @@ if not gettingData and not gettingTVData:
     saveData(compiledIMDBData, "CompiledData")
     
     #Trying matplotlib
-    makeplt("movie", "Movies", 111)
-    makeplt("show", "Shows", 111)
+    figure, axis = plt.subplots(2, 2)
+    makeplt("movie", "Movies", 212)
+    makeplt("show", "Shows", 212)
+    labels = []
+    amount = []
+    for key, value in compiledIMDBData["genre-amount"].items():
+        if len(labels) >= 10:
+            break
+        labels.append(key)
+        amount.append(value)
+    
+    axis[0, 1].pie(amount, labels=labels, autopct='%1.1f%%')
+    axis[0, 1].axis("equal")
+    plt.tight_layout()
     plt.xticks(rotation=45)
     plt.legend(loc="best")
     plt.show()
