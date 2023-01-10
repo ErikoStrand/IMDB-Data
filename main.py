@@ -279,8 +279,9 @@ def makeplt(which: str, name: str, color: str):
         
     xpoints = np.array(date)
     ypoints = np.array(count)
-    
-    plt.plot(xpoints, ypoints, color=color, label=name)
+    plt.title("Ratings Per Month")
+    plt.ylabel("Amount")
+    plt.plot(xpoints, ypoints, color=color, label=name, linestyle="-", linewidth=2)
 
 if not gettingData:
     IMDBData = loadData("IMDBData")
