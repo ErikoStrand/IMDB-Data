@@ -7,13 +7,14 @@ import ast
 import lxml
 import os
 import re
-import datetime
+import numpy as np
+import datetime as dt
 from matplotlib import pyplot as plt
 
 userid = "ur102308292" # your id here: ur294914023 for example.
 link = f"https://www.imdb.com/user/{userid}/ratings?ref_=nv_usr_rt_4"
 baseUrl = "https://www.imdb.com"
-gettingData = True
+gettingData = False
 gettingTVData = False
 
 IMDBData = {}
@@ -125,10 +126,10 @@ def getMinutesFromRuntime(runtime):
     return minutes
 
 def refactorDate():
-    months = {"Jan": 1, "Feb": 2, "Mar": 0, "Apr": 4, "May": 5, "Jun": 6, "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
+    months = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
     for key, value in IMDBData.items():
         date = value["date-rated"].split()
-        value["date-rated"] = (int(date[-1]), months[date[3]], int(date[2]))
+        value["date-rated"] = [int(date[-1]), months[date[3]], int(date[2])]
         
     saveData(IMDBData, "IMDBData")
     
@@ -163,8 +164,22 @@ def removeDuplicates():
         elif value["id"] in media:
             print("Duplicate detected")
             
-    saveData(newData, "IMDBData")         
-    
+    saveData(newData, "IMDBData")   
+          
+def getRatingsPerMonth(data):
+    date = data["date-rated"]
+    date.pop(-1)
+    if "episodes" in data:
+        if str(date) not in compiledIMDBData["ratings-per-month-show"]:
+            compiledIMDBData["ratings-per-month-show"][str(date)] = 1
+        else: 
+            compiledIMDBData["ratings-per-month-show"][str(date)] += 1
+    else:
+        if str(date) not in compiledIMDBData["ratings-per-month-movie"]:
+            compiledIMDBData["ratings-per-month-movie"][str(date)] = 1
+        else: 
+            compiledIMDBData["ratings-per-month-movie"][str(date)] += 1
+        
 def compileAllData():
     #opening dictionaries
     compiledIMDBData["total-media"]: int = 0
@@ -177,7 +192,8 @@ def compileAllData():
     compiledIMDBData["global-rating"]: int = 0
     compiledIMDBData["personal-rating"]: int = 0
     compiledIMDBData["genre-amount"] = {}
-    compiledIMDBData["media-per-month"] = {}
+    compiledIMDBData["ratings-per-month-movie"] = {}
+    compiledIMDBData["ratings-per-month-show"] = {}
                
     for key, value in IMDBData.items():
         if "episodes" not in value:
@@ -196,7 +212,7 @@ def compileAllData():
         
         genres = value["genres"]
         compileGenresIntoList(genres)
-            
+        getRatingsPerMonth(value)
             
             
     sortGenres() # converts the dictionary to a list and tuples.        
@@ -253,6 +269,19 @@ def updateIMDBData(data, dict):
         dict[info[-1]]["episodes"] = str(info[1])
     return dict
 
+def makeplt(which: str, name: str, color: str):
+    date = []    
+    count = []
+    for key, value in compiledIMDBData[f"ratings-per-month-{which}"].items():
+        key = ast.literal_eval(key)
+        date.append(dt.datetime(key[0], key[1], 1))
+        count.append(value)
+        
+    xpoints = np.array(date)
+    ypoints = np.array(count)
+    
+    plt.plot(xpoints, ypoints, color=color, label=name)
+
 if not gettingData:
     IMDBData = loadData("IMDBData")
     
@@ -307,3 +336,8 @@ if not gettingData and not gettingTVData:
     saveData(compiledIMDBData, "CompiledData")
     
     #Trying matplotlib
+    makeplt("movie", "Movies", "r")
+    makeplt("show", "Shows", "b")
+    plt.xticks(rotation=45)
+    plt.legend(loc="best")
+    plt.show()
