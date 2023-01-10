@@ -6,6 +6,7 @@ import random
 import ast
 import lxml
 import os
+import json
 import re
 import numpy as np
 import datetime as dt
@@ -14,7 +15,7 @@ from matplotlib import pyplot as plt
 userid = "ur102308292" # your id here: ur294914023 for example.
 link = f"https://www.imdb.com/user/{userid}/ratings?ref_=nv_usr_rt_4"
 baseUrl = "https://www.imdb.com"
-gettingData = False
+gettingData = True
 gettingTVData = False
 
 IMDBData = {}
@@ -34,7 +35,7 @@ def loadData(name):
 
 def saveData(dict, name):
     with open(f'{name}.json', 'wt', encoding="UTF-8") as data:
-        data.write(str(dict))   
+        data.write(json.dumps(dict, indent=4, ensure_ascii=False))   
     
 def getSiteData(link):
     r = session_request.get(link)
