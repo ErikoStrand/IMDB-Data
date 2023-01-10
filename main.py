@@ -144,7 +144,7 @@ def compileGenresIntoList(genres):
         try:
             compiledIMDBData["genre-amount"][genre] += 1
         except:
-            compiledIMDBData["genre-amount"][genre] = 0
+            compiledIMDBData["genre-amount"][genre] = 1
             
 def sortGenres():
     compiledIMDBData["genre-amount"] = sorted(compiledIMDBData["genre-amount"].items(), key=lambda x: x[1], reverse=True)
@@ -273,22 +273,34 @@ def updateIMDBData(data, dict):
         dict[info[-1]]["episodes"] = str(info[1])
     return dict
 
-def makeplt(which: str, name: str, subplot: int):
-    date = []    
-    count = []
-    for key, value in compiledIMDBData[f"ratings-per-month-{which}"].items():
-        key = ast.literal_eval(key)
-        date.append(dt.datetime(key[0], key[1], 1))
-        count.append(value)
+def makeplt(which: str, name: str, plot: str, ori: str, time: bool, title: str):
+    x = []    
+    y = []
+    for key, value in compiledIMDBData[f"{which}"].items():
+        if time:
+            key = ast.literal_eval(key)
+            x.append(dt.datetime(key[0], key[1], 1))
+            y.append(value)
+            plot.xaxis_date()
+            
+        elif not time:
+            x.append(key)
+            y.append(value)
+            
+    xpoints = np.array(x)
+    ypoints = np.array(y)
+    if ori == "v":
+        bar = plot.bar(xpoints, ypoints, width=25, label=name)
+    if ori == "h":
+        bar = plot.barh(xpoints, ypoints, label=name)
+        plot.set_xticks([])  
+          
+    plot.set_title(title, color="white")
+    plot.tick_params(labelcolor="white")
+    plot.set_facecolor(color="#232020")   
+    plot.legend(loc="best", fancybox=True, framealpha=0, labelcolor="linecolor")    
+    plot.bar_label(bar, size=8, color="white")
         
-    xpoints = np.array(date)
-    ypoints = np.array(count)
-    ax = plt.subplot(subplot)
-    bar = ax.bar(xpoints, ypoints, width=25, label=name)
-    ax.xaxis_date()
-    ax.bar_label(bar, size=8)
-    plt.title("Ratings Per Month")
-    
 if not gettingData:
     IMDBData = loadData("IMDBData")
     
@@ -345,21 +357,12 @@ if not gettingData and not gettingTVData:
     saveData(compiledIMDBData, "CompiledData")
     
     #Trying matplotlib
-    figure, axis = plt.subplots(2, 2)
-    makeplt("movie", "Movies", 212)
-    makeplt("show", "Shows", 212)
-    labels = []
-    amount = []
-    for key, value in compiledIMDBData["genre-amount"].items():
-        if len(labels) >= 10:
-            break
-        labels.append(key)
-        amount.append(value)
+    fig = plt.figure(figsize=(9, 9), facecolor="#232020")
+    ax1 = plt.subplot2grid((3, 3), (2, 0), colspan=3)
+    ax2 = plt.subplot2grid((3, 3), (0, 0), rowspan=2)
+    makeplt("ratings-per-month-movie", "Movies", ax1, "v", True, "Ratings Per Month")
+    makeplt("ratings-per-month-show", "Shows", ax1, "v", True, "Ratings Per Month")
+    makeplt("genre-amount", "Genre", ax2, "h", False, "Genres")
     
-    axis[0, 1].pie(amount, labels=labels, autopct='%1.1f%%')
-    axis[0, 1].axis("equal")
-    axis[0, 1].set_title("Genre Pie")
     plt.tight_layout()
-    plt.xticks(rotation=45)
-    plt.legend(loc="best")
     plt.show()
