@@ -139,7 +139,6 @@ def refactorDate():
     
 def compileGenresIntoList(genres):
     genres = genres.replace(",", "").lower()
-    print(genres)
     genres = genres.split()
     for genre in genres:
         try:
@@ -274,7 +273,7 @@ def updateIMDBData(data, dict):
         dict[info[-1]]["episodes"] = str(info[1])
     return dict
 
-def makeplt(which: str, name: str, color: str):
+def makeplt(which: str, name: str, subplot: int):
     date = []    
     count = []
     for key, value in compiledIMDBData[f"ratings-per-month-{which}"].items():
@@ -284,9 +283,13 @@ def makeplt(which: str, name: str, color: str):
         
     xpoints = np.array(date)
     ypoints = np.array(count)
+    ax = plt.subplot(subplot)
+    bar = ax.bar(xpoints, ypoints, width=25, label=name)
+    ax.xaxis_date()
+    ax.bar_label(bar, size=8)
     plt.title("Ratings Per Month")
     plt.ylabel("Amount")
-    plt.plot(xpoints, ypoints, color=color, label=name, linestyle="-", linewidth=2)
+    #plt.plot(xpoints, ypoints, color=color, label=name, linestyle="-", linewidth=2)
 
 if not gettingData:
     IMDBData = loadData("IMDBData")
@@ -342,8 +345,8 @@ if not gettingData and not gettingTVData:
     saveData(compiledIMDBData, "CompiledData")
     
     #Trying matplotlib
-    makeplt("movie", "Movies", "r")
-    makeplt("show", "Shows", "b")
+    makeplt("movie", "Movies", 111)
+    makeplt("show", "Shows", 111)
     plt.xticks(rotation=45)
     plt.legend(loc="best")
     plt.show()
