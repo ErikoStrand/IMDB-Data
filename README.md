@@ -1,5 +1,7 @@
 # IMDB-Data
 As seem below. In it's current state you copy and paste your imdb ID and after a while you get back certain statistics about your account.
+
+
 Only warning I can give you is that it takes about 3.5 seconds per 100 ratings and that is not including your tv-shows.
 
 ![image](https://user-images.githubusercontent.com/75546186/208280371-f1bdbe0b-3f9f-49d3-aa5a-21ab9fb9c325.png)
