@@ -10,6 +10,7 @@ Took 30minutes of waiting for responses. Hoping to get this down to 10 minutes. 
 ![image](https://user-images.githubusercontent.com/75546186/208280337-2869c1be-691a-4a76-9be0-281774d32f79.png)
 
 Trying to figure out how to use matplotlib. But look at this cool thing. Shows you your ratings by month.
+Will change this to a bar graph since it makes more sense.
 ![Figure_1](https://user-images.githubusercontent.com/75546186/211492879-e5810b05-ea34-432b-92d5-0d850e22bd99.png)
 
 
