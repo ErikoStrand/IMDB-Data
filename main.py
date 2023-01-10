@@ -358,6 +358,7 @@ if not gettingData and not gettingTVData:
     
     axis[0, 1].pie(amount, labels=labels, autopct='%1.1f%%')
     axis[0, 1].axis("equal")
+    axis[0, 1].set_title("Genre Pie")
     plt.tight_layout()
     plt.xticks(rotation=45)
     plt.legend(loc="best")
