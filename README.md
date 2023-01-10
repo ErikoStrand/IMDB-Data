@@ -7,9 +7,8 @@ Only warning I can give you is that it takes about 3.5 seconds per 100 ratings a
 ![image](https://user-images.githubusercontent.com/75546186/208280371-f1bdbe0b-3f9f-49d3-aa5a-21ab9fb9c325.png)
 ![image](https://user-images.githubusercontent.com/75546186/208280337-2869c1be-691a-4a76-9be0-281774d32f79.png)
 
-Trying to figure out how to use matplotlib. But look at this cool thing. Shows you your ratings by month.
-Will change this to a bar graph since it makes more sense.
-![Figure_1](https://user-images.githubusercontent.com/75546186/211492879-e5810b05-ea34-432b-92d5-0d850e22bd99.png)
+Getting some hang of how to use matplotlib. Now shows your genres too. Switching the color scheme up a bit.
+![Figure_1](https://user-images.githubusercontent.com/75546186/211633162-4f9a185c-cc47-452a-9a83-a1ec6a92d410.png)
 
 
 thank you tvmaze for the api. (used for tv-shows)
