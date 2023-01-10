@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 userid = "ur102308292" # your id here: ur294914023 for example.
 link = f"https://www.imdb.com/user/{userid}/ratings?ref_=nv_usr_rt_4"
 baseUrl = "https://www.imdb.com"
-gettingData = True
+gettingData = False
 gettingTVData = False
 
 IMDBData = {}
@@ -93,7 +93,10 @@ def createIMDBData(pageData, page):
         except:
             IMDBData[selected]["runtime"] = "0 min"
         try: 
-            IMDBData[selected]["genres"] = data.find("span", class_="genre").text
+            genre = data.find("span", class_="genre").text
+            genre = genre.split()
+            genre = " ".join(genre)
+            IMDBData[selected]["genres"] = genre
         except:
             IMDBData[selected]["genres"] = "none"
             
@@ -136,6 +139,7 @@ def refactorDate():
     
 def compileGenresIntoList(genres):
     genres = genres.replace(",", "").lower()
+    print(genres)
     genres = genres.split()
     for genre in genres:
         try:
