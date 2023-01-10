@@ -27,13 +27,13 @@ pattern = re.compile(r"Rated on")
 
 # Make a GET request to the URL
 def loadData(name):
-    with open(f"{name}.txt", "r", encoding="UTF-8") as f:
+    with open(f"{name}.json", "r", encoding="UTF-8") as f:
         s = f.read()
     IMDBData = ast.literal_eval(s)
     return IMDBData
 
 def saveData(dict, name):
-    with open(f'{name}.txt', 'wt', encoding="UTF-8") as data:
+    with open(f'{name}.json', 'wt', encoding="UTF-8") as data:
         data.write(str(dict))   
     
 def getSiteData(link):
