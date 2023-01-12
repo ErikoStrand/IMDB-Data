@@ -11,8 +11,8 @@ import re
 import numpy as np
 import datetime as dt
 from matplotlib import pyplot as plt
-
-userid = "ur102308292" # your id here: ur294914023 for example.
+# remove all reviews from 1970. 
+userid = "ur0204988" # your id here: ur294914023 for example.
 link = f"https://www.imdb.com/user/{userid}/ratings?ref_=nv_usr_rt_4"
 baseUrl = "https://www.imdb.com"
 gettingData = False
