@@ -1,4 +1,9 @@
 # IMDB-Data
+Was a great projec to see my data but now it seems the almight Internet movie data base has dissalowed requests to a users rating :(
+https://www.imdb.com/robots.txt
+Im very sad but I learnt alot so thank you anyways.
+
+
 As seem below. In it's current state you copy and paste your imdb ID and after a while you get back certain statistics about your account.
 
 
